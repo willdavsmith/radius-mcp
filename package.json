@@ -1,9 +1,19 @@
 {
-  "name": "radius-mcp",
-  "private": true,
+  "name": "@willdavsmith/radius-mcp",
+  "version": "0.1.0",
+  "license": "MIT",
   "type": "module",
+  "bin": {
+    "radius-mcp": "./dist/server.js"
+  },
+  "main": "./dist/server.js",
+  "types": "./dist/server.d.ts",
+  "files": [
+    "dist"
+  ],
   "scripts": {
-    "dev": "tsx server.ts"
+    "dev": "tsx src/server.ts",
+    "build": "tsc"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.1",
