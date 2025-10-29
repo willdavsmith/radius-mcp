@@ -1,6 +1,6 @@
 {
   "name": "@willdavsmith/radius-mcp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "MIT",
   "type": "module",
   "bin": {
@@ -13,7 +13,8 @@
   ],
   "scripts": {
     "dev": "tsx src/server.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "upload": "npm run build && npm publish --access public"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.20.1",

@@ -545,17 +545,16 @@ mcp.registerTool(
   {
     title: "List Radius Resource Types",
     description:
-      "List available Radius resource types, excluding built-in namespaces by default so new provider namespaces are highlighted.",
+      "List available Radius resource types, excluding built-in namespaces so new provider namespaces are highlighted.",
     inputSchema: {
       scope: ScopeSchema,
       excludeNamespaces: z.array(z.string()).optional().describe("Additional namespace prefixes to filter out"),
-      includeBuiltIn: z.boolean().optional().describe("Set to true to include built-in Application.* and Microsoft.* namespaces."),
     },
     outputSchema: {
       resourceTypes: z.array(z.any()),
     },
   },
-  async ({ scope, excludeNamespaces, includeBuiltIn }) => {
+  async ({ scope, excludeNamespaces }) => {
     const scopeForCommand = scope?.workspace ? { workspace: scope.workspace } : undefined;
 
     const rawItems = await rad.runJson<unknown[]>(["resource-type", "list"], {
@@ -567,7 +566,7 @@ mcp.registerTool(
 
     const filtered = (Array.isArray(rawItems) ? rawItems : []).filter((item) => {
       const namespace = deriveNamespaceFromItem(item);
-      if (!includeBuiltIn && namespace && isBuiltInNamespace(namespace)) {
+      if (namespace && isBuiltInNamespace(namespace)) {
         return false;
       }
       if (!filters.length) return true;
@@ -576,7 +575,7 @@ mcp.registerTool(
 
     const display = filtered.length
       ? filtered
-      : "No resource types matched the current filters. Try adjusting excludeNamespaces or includeBuiltIn.";
+      : "No resource types matched the current filters. Try adjusting excludeNamespaces.";
 
     return respond(display, { resourceTypes: filtered });
   }
@@ -1020,6 +1019,41 @@ function countSchemaPropertiesFromSchema(schema: unknown): number | undefined {
   if (!properties || typeof properties !== "object") return undefined;
   return Object.keys(properties as Record<string, unknown>).length;
 }
+
+// ============================================================================
+// Resource Group Tools
+// ============================================================================
+
+mcp.registerTool(
+  "group-list",
+  {
+    title: "List Resource Groups",
+    description: "List Radius resource groups within the active or specified workspace.",
+    inputSchema: {
+      scope: ScopeSchema,
+    },
+    outputSchema: {
+      groups: z.array(z.any()),
+      diagnostics: z.array(z.string()).optional(),
+    },
+  },
+  async ({ scope }) => {
+    const { scope: resolvedScope, diagnostics } = await resolveScopeDefaults(scope ?? undefined);
+    const scopeForCommand = resolvedScope?.workspace ? { workspace: resolvedScope.workspace } : undefined;
+
+    const groups = await rad.runJson<unknown[]>(["group", "list"], {
+      scope: scopeForCommand,
+      context: "group-list",
+    });
+
+    const structured: Record<string, unknown> = { groups };
+    if (diagnostics.length) {
+      structured.diagnostics = diagnostics;
+    }
+
+    return respond(structured, structured);
+  }
+);
 
 // ============================================================================
 // Environment Tools
